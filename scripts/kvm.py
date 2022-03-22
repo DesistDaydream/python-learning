@@ -15,9 +15,7 @@ def bytes2symbols(bytes_value):
     symbols = ("K", "M", "G", "T", "P", "E", "Z", "Y")
 
     """每个单位对应的bytes数的字典,先定义为空"""
-    prefix = {
-
-    }
+    prefix = {}
 
     """要得到这样的{K:1024, M:1024*1024,G:1024**3},进行for循环"""
     for i, s in enumerate(symbols):
@@ -26,7 +24,7 @@ def bytes2symbols(bytes_value):
         # """s:代表改下标对应的值"""
 
         # """取到符号元组的值,作为prfix字典的key,根据key给value进行赋值"""
-        prefix[s] = 1024**(i+1)
+        prefix[s] = 1024 ** (i + 1)
 
     # """打印得到的对应字典"""
     # print(prefix)
@@ -35,7 +33,7 @@ def bytes2symbols(bytes_value):
     # """循环prefix字典,得到转换值"""
     for key, value in prefix.items():
         if bytes_value >= value:
-            symbols_value = bytes_value/value
+            symbols_value = bytes_value / value
             symbol = key
         # 如果不满足最小的KB,则以B显示
         elif bytes_value < 1024:
@@ -49,7 +47,7 @@ def DomainMemUsage(domain):
     meminfo = domain.memoryStats()
     free_mem = float(meminfo["unused"])
     total_mem = float(meminfo["available"])
-    util_mem = ((total_mem-free_mem) / total_mem)*100
+    util_mem = ((total_mem - free_mem) / total_mem) * 100
     return round(util_mem, 2)
 
 
@@ -61,51 +59,63 @@ def DomainCpuUsage(domain):
     t2 = time.time()
     c2 = int(domain.info()[4])
     c_nums = int(domain.info()[3])
-    usage = (c2-c1)*100/((t2-t1)*c_nums*1e9)
+    usage = (c2 - c1) * 100 / ((t2 - t1) * c_nums * 1e9)
     return round(usage, 2)
 
 
-def DomainMonitoring(bytes2symbols, conn, table):
+# TODO: 怎么能判断出所有虚拟机所拥有的磁盘，每个磁盘添加一列呢？
+def DomainDiskUsage(domain):
+    # 开始计算磁盘I/O
+    # tree = ElementTree.fromstring(domain.XMLDesc())
+    # devices = tree.findall("devices/disk/target")
+
+    # for d in devices:
+    # domainBlockDevice = d.get("dev")
+    domainBlockDevice = "vda"
+    try:
+        # _, rd_bytes, _, wr_bytes, _ = domain.blockStats(domainBlockDevice)
+        capacity, allocation, physical = domain.blockInfo(domainBlockDevice)
+
+        # print("容量:%10s" % bytes2symbols(capacity))
+        # print("分配:%10s" % bytes2symbols(allocation))
+        # print("物理:%10s" % bytes2symbols(physical))
+
+    except:
+        pass
+    return bytes2symbols(capacity), bytes2symbols(allocation)
+
+
+def DomainMonitoring(conn, table):
     try:
         for id in reversed(conn.listDomainsID()):
-            print("\n")
             domain = conn.lookupByID(id)
 
             domainName = "\033[0;37;44m%s\033[0m" % domain.name()
-            domainStat = "\033[0;37;42m%s\033[0m" % "开机" if domain.info()[
-                0] == 1 else "\033[0;37;41m%s\033[0m" % "关机"
-            domainMem = (str)(domain.info()[1]/1024/1024) + "GiB"
+            domainStat = (
+                "\033[0;37;42m%s\033[0m" % "开机"
+                if domain.info()[0] == 1
+                else "\033[0;37;41m%s\033[0m" % "关机"
+            )
+            domainMem = (str)(domain.info()[1] / 1024 / 1024) + "GiB"
             domainCPU = (str)(domain.info()[3])
             domainMemUsage = str(DomainMemUsage(domain)) + "%"
             domainCpuUsage = str(DomainCpuUsage(domain)) + "%"
+            domainDisk, domainDiskUsed = DomainDiskUsage(domain)
+            # domainDiskUsage = (float(domainDiskUsed) / float(domainDisk)) * 100
+            # print(round(domainDiskUsage, 2))
 
-            # print("CPU 时间: " + (str)(domain.info()[4]))
-
-            table.add_row([domainName, domainStat, domainCPU, domainMem, domainCpuUsage,
-                          domainMemUsage])
-
-            # 开始计算磁盘I/O
-            tree = ElementTree.fromstring(domain.XMLDesc())
-            devices = tree.findall("devices/disk/target")
-
-            for d in devices:
-                device = d.get("dev")
-                try:
-                    devstats = domain.blockStats(device)
-                    print("磁盘设备："+(device, devstats)[0],)
-                    read_bytes = bytes2symbols((device, devstats)[1][0])
-                    write_bytes = bytes2symbols((device, devstats)[1][2])
-
-                    print(("读:%10s" % read_bytes),)
-                    print("读取请求：" + (str)((device, devstats)[1][1]) + "次",)
-                    print(("写:%10s" % write_bytes),)
-                    print("写入请求：" + (str)((device, devstats)[1][3]) + "次")
-
-                    # table.add_column()
-
-                except libvirt.libvirtError:
-                    pass
-
+            table.add_row(
+                [
+                    domainName,
+                    domainStat,
+                    domainCPU,
+                    domainMem,
+                    domainCpuUsage,
+                    domainMemUsage,
+                    domainDisk,
+                    domainDiskUsed,
+                ]
+            )
     except:
         pass
 
@@ -123,16 +133,11 @@ signal.signal(signal.SIGTERM, my_handler)
 
 stop = False
 
-while True:
-    try:
-        if stop:
-            conn.close()
-            break
-    except:
-        pass
 
+def main():
     os.system("clear")
-    print('''
+    print(
+        '''
     *********************************************
                     _ooOoo_
                     o8888888o
@@ -152,9 +157,14 @@ while True:
         \  \ `-.   \_ __\ / __ _ / .-` / /
     == == ==`-.____`- .___\_____/___.-`____.-"== == ==                    `=-- -="
     ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
-            佛祖保佑       永不宕机''')
-    print(("\033[0;37;41m%s\033[0m" %
-           "\n\n######################     实时监控kvm虚拟机信息--CPU,内存，磁盘I/O    ##################"))
+            佛祖保佑       永不宕机'''
+    )
+    print(
+        (
+            "\033[0;37;41m%s\033[0m"
+            % "\n\n######################     实时监控kvm虚拟机信息--CPU,内存，磁盘I/O    ##################"
+        )
+    )
     print("Ctrl+C 可退出程序,脚本每6秒执行一次")
 
     conn = libvirt.open("qemu:///system")
@@ -165,11 +175,25 @@ while True:
         time.sleep(1)
         sys.exit()
 
-    table = PrettyTable(["实例名", "状态", "CPU", "内存", "CPU使用率", "内存使用率"])
+    table = PrettyTable(
+        ["实例名", "状态", "CPU", "内存", "CPU使用率", "内存使用率", "系统盘总容量", "系统盘使用量"]
+    )
 
-    DomainMonitoring(bytes2symbols, conn, table)
+    DomainMonitoring(conn, table)
 
     print(table)
 
+    conn.close()
+
     os.system("command")
     time.sleep(6)
+
+
+while True:
+    try:
+        if stop:
+            break
+    except:
+        pass
+
+    main()
