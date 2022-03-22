@@ -74,15 +74,15 @@ def DomainMonitoring(bytes2symbols, conn, table):
             domainName = "\033[0;37;44m%s\033[0m" % domain.name()
             domainStat = "\033[0;37;42m%s\033[0m" % "开机" if domain.info()[
                 0] == 1 else "\033[0;37;41m%s\033[0m" % "关机"
-            domainMem = (str)(domain.info()[1]/1024/1024) + "MiB"
+            domainMem = (str)(domain.info()[1]/1024/1024) + "GiB"
             domainCPU = (str)(domain.info()[3])
             domainMemUsage = str(DomainMemUsage(domain)) + "%"
             domainCpuUsage = str(DomainCpuUsage(domain)) + "%"
 
             # print("CPU 时间: " + (str)(domain.info()[4]))
 
-            table.add_row([domainName, domainStat, domainMem,
-                          domainCPU, domainMemUsage, domainCpuUsage])
+            table.add_row([domainName, domainStat, domainCPU, domainMem, domainCpuUsage,
+                          domainMemUsage])
 
             # 开始计算磁盘I/O
             tree = ElementTree.fromstring(domain.XMLDesc())
@@ -165,7 +165,7 @@ while True:
         time.sleep(1)
         sys.exit()
 
-    table = PrettyTable(["实例名", "状态", "内存", "CPU", "内存使用率", "CPU使用率"])
+    table = PrettyTable(["实例名", "状态", "CPU", "内存", "CPU使用率", "内存使用率"])
 
     DomainMonitoring(bytes2symbols, conn, table)
 
