@@ -66,22 +66,20 @@ def DomainCpuUsage(domain):
 # TODO: 怎么能判断出所有虚拟机所拥有的磁盘，每个磁盘添加一列呢？
 def DomainDiskUsage(domain):
     # 开始计算磁盘I/O
-    # tree = ElementTree.fromstring(domain.XMLDesc())
-    # devices = tree.findall("devices/disk/target")
+    tree = ElementTree.fromstring(domain.XMLDesc())
+    devices = tree.findall("devices/disk/target")
 
-    # for d in devices:
-    # domainBlockDevice = d.get("dev")
-    domainBlockDevice = "vda"
-    try:
-        # _, rd_bytes, _, wr_bytes, _ = domain.blockStats(domainBlockDevice)
-        capacity, allocation, physical = domain.blockInfo(domainBlockDevice)
+    for d in devices:
+        # domainBlockDevice = d.get("dev")
+        domainBlockDevice = "vda"
+        try:
+            capacity, allocation, _ = domain.blockInfo(domainBlockDevice)
+            # print("容量:%10s" % bytes2symbols(capacity))
+            # print("分配:%10s" % bytes2symbols(allocation))
+            # print("物理:%10s" % bytes2symbols(physical))
+        except Exception:
+            continue
 
-        # print("容量:%10s" % bytes2symbols(capacity))
-        # print("分配:%10s" % bytes2symbols(allocation))
-        # print("物理:%10s" % bytes2symbols(physical))
-
-    except:
-        pass
     return bytes2symbols(capacity), bytes2symbols(allocation)
 
 
@@ -96,10 +94,11 @@ def DomainMonitoring(conn, table):
                 if domain.info()[0] == 1
                 else "\033[0;37;41m%s\033[0m" % "关机"
             )
-            domainMem = (str)(domain.info()[1] / 1024 / 1024) + "GiB"
-            domainCPU = (str)(domain.info()[3])
+            domainMem = str(domain.info()[1] / 1024 / 1024) + "GiB"
+            domainCPU = str(domain.info()[3])
             domainMemUsage = str(DomainMemUsage(domain)) + "%"
             domainCpuUsage = str(DomainCpuUsage(domain)) + "%"
+
             domainDisk, domainDiskUsed = DomainDiskUsage(domain)
             # domainDiskUsage = (float(domainDiskUsed) / float(domainDisk)) * 100
             # print(round(domainDiskUsage, 2))
