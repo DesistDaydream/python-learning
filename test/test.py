@@ -1,9 +1,7 @@
-import socket
+def test(a: int, b: str) -> str:
+    print(a, b)
+    return 1000
 
 
-def getIP(domain):
-    myaddr = socket.getaddrinfo(domain, 'http')
-    print(myaddr)
-
-
-getIP("www.baidu.com")
+if __name__ == "__main__":
+    test("test", "abc")

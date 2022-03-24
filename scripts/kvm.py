@@ -42,7 +42,7 @@ def bytes2symbols(bytes_value):
     return "%0.2f%sB" % (symbols_value, symbol)
 
 
-def DomainMemUsage(domain):
+def DomainMemUsage(domain: libvirt.virDomain):
     domain.setMemoryStatsPeriod(10)
     meminfo = domain.memoryStats()
     free_mem = float(meminfo["unused"])
@@ -51,7 +51,7 @@ def DomainMemUsage(domain):
     return round(util_mem, 2)
 
 
-def DomainCpuUsage(domain):
+def DomainCpuUsage(domain: libvirt.virDomain):
     # 开始计算cpu使用率
     t1 = time.time()
     c1 = int(domain.info()[4])
@@ -64,31 +64,34 @@ def DomainCpuUsage(domain):
 
 
 # TODO: 怎么能判断出所有虚拟机所拥有的磁盘，每个磁盘添加一列呢？
-def DomainDiskUsage(domain):
+def DomainDiskUsage(domain: libvirt.virDomain):
     # 开始计算磁盘I/O
     tree = ElementTree.fromstring(domain.XMLDesc())
     devices = tree.findall("devices/disk/target")
 
     for d in devices:
-        # domainBlockDevice = d.get("dev")
-        domainBlockDevice = "vda"
+        domainBlockDevice = d.get("dev")
+        # domainBlockDevice = "vda"
         try:
             capacity, allocation, _ = domain.blockInfo(domainBlockDevice)
-            # print("容量:%10s" % bytes2symbols(capacity))
-            # print("分配:%10s" % bytes2symbols(allocation))
-            # print("物理:%10s" % bytes2symbols(physical))
+            print(
+                "虚拟机 {} 的磁盘设备 {} 总容量 {},分配了 {}".format(
+                    "\033[0;37;44m{}\033[0m".format(domain.name()),
+                    domainBlockDevice,
+                    bytes2symbols(capacity),
+                    bytes2symbols(allocation),
+                )
+            )
         except Exception:
             continue
 
-    return bytes2symbols(capacity), bytes2symbols(allocation)
 
-
-def DomainMonitoring(conn, table):
+def DomainMonitoring(conn: libvirt.virConnect, table: PrettyTable):
     try:
-        for id in reversed(conn.listDomainsID()):
+        for id in conn.listDomainsID():
             domain = conn.lookupByID(id)
 
-            domainName = "\033[0;37;44m%s\033[0m" % domain.name()
+            domainName = "\033[0;37;44m{}\033[0m".format(domain.name())
             domainStat = (
                 "\033[0;37;42m%s\033[0m" % "开机"
                 if domain.info()[0] == 1
@@ -99,20 +102,16 @@ def DomainMonitoring(conn, table):
             domainMemUsage = str(DomainMemUsage(domain)) + "%"
             domainCpuUsage = str(DomainCpuUsage(domain)) + "%"
 
-            domainDisk, domainDiskUsed = DomainDiskUsage(domain)
-            # domainDiskUsage = (float(domainDiskUsed) / float(domainDisk)) * 100
-            # print(round(domainDiskUsage, 2))
+            # DomainDiskUsage(domain)
 
             table.add_row(
                 [
                     domainName,
                     domainStat,
                     domainCPU,
-                    domainMem,
                     domainCpuUsage,
+                    domainMem,
                     domainMemUsage,
-                    domainDisk,
-                    domainDiskUsed,
                 ]
             )
     except:
@@ -145,8 +144,8 @@ def main():
                     O\  =  /O
                 ____/`---"\____
                 ."  \\|     |//  `.
-                /  \\|||  :  |||//  \
-            /  _||||| -:- |||||-  \
+                /  \\|||  :  |||//  \\
+            /  _||||| -:- |||||-  \\
             |   | \\\  -  /// |   |
             | \_|  ""\---/""  |   |
             \  .-\__  `-`  ___/-. /
@@ -159,9 +158,8 @@ def main():
             佛祖保佑       永不宕机'''
     )
     print(
-        (
-            "\033[0;37;41m%s\033[0m"
-            % "\n\n######################     实时监控kvm虚拟机信息--CPU,内存，磁盘I/O    ##################"
+        "\033[0;37;41m{}\033[0m".format(
+            "######################     实时监控kvm虚拟机信息--CPU,内存,磁盘I/O    ##################"
         )
     )
     print("Ctrl+C 可退出程序,脚本每6秒执行一次")
@@ -169,14 +167,12 @@ def main():
     conn = libvirt.open("qemu:///system")
 
     if len(conn.listDomainsID()) <= 0:
-        print("\033[0;37;41m%s\033[0m" % "没有正在运行的虚拟机，程序退出.")
+        print("\033[0;37;41m{}\033[0m".format("没有正在运行的虚拟机，程序退出."))
         os.system("command")
         time.sleep(1)
         sys.exit()
 
-    table = PrettyTable(
-        ["实例名", "状态", "CPU", "内存", "CPU使用率", "内存使用率", "系统盘总容量", "系统盘使用量"]
-    )
+    table = PrettyTable(["实例名", "状态", "CPU", "CPU使用率", "内存", "内存使用率"])
 
     DomainMonitoring(conn, table)
 
