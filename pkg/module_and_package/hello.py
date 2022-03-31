@@ -20,3 +20,5 @@ def test():
 
 if __name__ == "__main__":
     test()
+    print(__package__)
+    print(__name__)
