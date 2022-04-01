@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # 使用 class 关键字定义一个名为 Student 的类
-class Student(object):
+class Student:
     # 初始化属性
     def __init__(self, name):
         self.name = name
