@@ -73,6 +73,7 @@ def DomainDiskUsage(domain: libvirt.virDomain):
         domainBlockDevice = d.get("dev")
         # domainBlockDevice = "vda"
         try:
+            # 这个逻辑可能会获取到错误信息，并由 libvirt 库直接写到 shell 中，通过 `python3 kvm.py 2> /dev/null` 即可忽略错误信息
             capacity, allocation, _ = domain.blockInfo(domainBlockDevice)
             print(
                 "虚拟机 {} 的磁盘设备 {} 总容量 {},分配了 {}".format(
@@ -82,7 +83,7 @@ def DomainDiskUsage(domain: libvirt.virDomain):
                     bytes2symbols(allocation),
                 )
             )
-        except Exception:
+        except Exception as err:
             continue
 
 
@@ -102,7 +103,7 @@ def DomainMonitoring(conn: libvirt.virConnect, table: PrettyTable):
             domainMemUsage = str(DomainMemUsage(domain)) + "%"
             domainCpuUsage = str(DomainCpuUsage(domain)) + "%"
 
-            # DomainDiskUsage(domain)
+            DomainDiskUsage(domain)
 
             table.add_row(
                 [
