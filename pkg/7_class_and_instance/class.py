@@ -3,7 +3,7 @@
 
 # 使用 class 关键字定义一个名为 Student 的类
 class Student:
-    # 初始化属性
+    # 初始化属性。总是要带一个 self 参数，用来表示这个类自身，当实例化后，可以通过实例化后的变量直接调用自身的属性
     def __init__(self, name):
         self.name = name
         self.score = ""
@@ -32,6 +32,8 @@ class Student:
 
 # 实例化
 bart = Student("Bart Simpson")
+# 这里由于上面有 self，所以 self.name 就表示这个类自身的 name 属性，当实例化后，可以直接使用实例化的变量调用 name 属性
+print(bart.name)
 
 bart.sum(100, 99)
 bart.printScore()
