@@ -16,7 +16,7 @@ parser.add_argument("-w", "--work-dir", default="/root/downloads/work", help="�
 parser.add_argument("-c", "--containerd-version", default="1.6.2", help="containerd 版本")
 parser.add_argument("-n", "--nerdctl-version", default="0.18.0", help="nerdctl 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
-parser.add_argument("-l", "--log-level", default="info", help="工具架构")
+parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
 
 class cli_flags:
@@ -35,7 +35,6 @@ class cli_flags:
 
 def initLogging():
     loglevel = {"info": logging.INFO, "warn": logging.WARN, "debug": logging.DEBUG}
-
     logging.basicConfig(
         level=loglevel[flags.LogLevel],
         format="[%(asctime)s] %(filename)s[line:%(lineno)d] %(levelname)s %(message)s",
