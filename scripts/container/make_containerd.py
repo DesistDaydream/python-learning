@@ -44,13 +44,13 @@ def initLogging():
     )
 
 
-def archiving():
+def archiving(src: str, dest: str):
     # 改变工作路径以去掉所有待归档文件的前缀
-    os.chdir(flags.WorkDir)
+    os.chdir(src)
     logging.debug("当前工作路径: {}".format(os.getcwd()))
 
     # 创建归档文件
-    tar = tarfile.open(flags.DownloadDir + "/ehualu-containerd-{}.tar.gz".format(flags.ContainerdVersion), "w:gz")
+    tar = tarfile.open(dest, "w:gz")
 
     # 开始归档
     for root, dir, files in os.walk("."):
@@ -66,7 +66,7 @@ def archiving():
     # )
 
 
-def extracting(tar_path, target_path):
+def extracting(tar_path: str, target_path: str):
     try:
         tar = tarfile.open(tar_path, "r:gz")
         file_names = tar.getnames()
@@ -134,4 +134,4 @@ if __name__ == "__main__":
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles()
     # 归档，生成归档文件
-    archiving()
+    archiving(flags.WorkDir, flags.DownloadDir + "/ehualu-containerd-{}.tar.gz".format(flags.ContainerdVersion))
