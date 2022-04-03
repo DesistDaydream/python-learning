@@ -8,27 +8,11 @@ import re
 parser = argparse.ArgumentParser(description="CDN curl tools")
 parser.add_argument("URL", help="请求URL，必填;如含有特殊参数字符，URL使用双引号括起来", type=str)
 parser.add_argument("-M", "-m", "--method", help="请求方法，默认是GET，支持HEAD", default="GET")
-parser.add_argument(
-    "-R",
-    "-r",
-    "--range",
-    help="发送range头 格式 startbyte-endbyte，默认0-10000000",
-    type=str,
-    default="0-10000000",
-)
-parser.add_argument(
-    "-H",
-    "--headers",
-    help="发送自定义请求header头，key:value格式，支持多个以逗号分隔，" '如"Accept-Encoding:gzip,key:value"',
-    type=str,
-)
-parser.add_argument(
-    "-J", "-j", "--json", action="store_true", default=False, help="结果以json形式展示"
-)
+parser.add_argument("-R", "-r", "--range", help="发送range头 格式 startbyte-endbyte，默认0-10000000", type=str, default="0-10000000")
+parser.add_argument("-H", "--headers", help="发送自定义请求header头，key:value格式，支持多个以逗号分隔，" '如"Accept-Encoding:gzip,key:value"', type=str)
+parser.add_argument("-J", "-j", "--json", action="store_true", default=False, help="结果以json形式展示")
 parser.add_argument("-v", "-V", "--version", action="version", version="%(prog)s 1.0")
-parser.add_argument(
-    "-x", "--proxy", help="代理IP地址，IP:PORT，eg : 1.1.1.1:80", type=str, default=""
-)
+parser.add_argument("-x", "--proxy", help="代理IP地址，IP:PORT，eg : 1.1.1.1:80", type=str, default="")
 
 User_Agent = "HWCDN CurlTool"
 
@@ -103,9 +87,7 @@ if __name__ == "__main__":
         for i in list_a:
             list_b = i.split(":")
             headers_dict.update({list_b[0]: list_b[1]})
-    curl_result = curl(
-        url, args_dic["method"], args_dic["range"], args_dic["proxy"], **headers_dict
-    )
+    curl_result = curl(url, args_dic["method"], args_dic["range"], args_dic["proxy"], **headers_dict)
     # 响应输出
     if args_dic["json"]:
         print(curl_result)

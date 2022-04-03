@@ -4,6 +4,9 @@
 import os
 import shutil
 
+# 执行 Shell 命令
+os.system("w")
+
 # 获取当前目录
 CurrentDir = os.getcwd()
 print("当前目录为: ", CurrentDir)
