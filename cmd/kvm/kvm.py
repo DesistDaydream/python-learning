@@ -181,7 +181,6 @@ def main():
 
     conn.close()
 
-    os.system("command")
     time.sleep(6)
 
 
