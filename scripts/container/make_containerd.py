@@ -82,89 +82,91 @@ def extracting(tar_path: str, target_path: str):
 
 
 # 文件处理器。下载、解压、处理。继承了命令行标志
-class files_handler(cli_flags):
+class files_handler:
     def __init__(self):
+        # 文件名
         # containerdFileName = "cri-containerd-cni-{}-linux-{}.tar.gz".format(flags.ContainerdVersion, flags.Arch)
-        self.containerdFileName = "containerd-{}-linux-{}.tar.gz".format(flags.ContainerdVersion, flags.Arch)
-        self.containerdServiceFileName = "containerd.service"
-        self.runcFileName = "runc.{}".format(flags.Arch)
-        self.cnipluginFileName = "cni-plugins-linux-{}-v{}.tgz".format(flags.Arch, flags.CNIPluginVersion)
-        self.nerdctlFileName = "nerdctl-{}-linux-{}.tar.gz".format(flags.NerdctlVersion, flags.Arch)
-        self.containerdFile = ""
-        self.containerdServiceFile = ""
-        self.runcFile = ""
-        self.cnipluginFile = ""
-        self.nerdctlFile = ""
+        self.ContainerdFileName = "containerd-{}-linux-{}.tar.gz".format(flags.ContainerdVersion, flags.Arch)
+        self.ContainerdServiceFileName = "containerd.service"
+        self.RuncFileName = "runc.{}".format(flags.Arch)
+        self.CNIpluginFileName = "cni-plugins-linux-{}-v{}.tgz".format(flags.Arch, flags.CNIPluginVersion)
+        self.NerdctlFileName = "nerdctl-{}-linux-{}.tar.gz".format(flags.NerdctlVersion, flags.Arch)
+        # 文件保存路径
+        self.ContainerdFilePath = "{}/{}".format(flags.DownloadDir, self.ContainerdFileName)
+        self.ContainerdServiceFilePath = "{}/{}".format(flags.DownloadDir, self.ContainerdServiceFileName)
+        self.RuncFilePath = "{}/{}".format(flags.DownloadDir, self.RuncFileName)
+        self.CNIpluginFilePath = "{}/{}".format(flags.DownloadDir, self.CNIpluginFileName)
+        self.NerdctlFilePath = "{}/{}".format(flags.DownloadDir, self.NerdctlFileName)
+        # 下载文件的 URL
+        self.ContainerdURL = "https://github.com/containerd/containerd/releases/download/v{}/{}".format(
+            flags.ContainerdVersion, self.ContainerdFileName
+        )
+        self.ContainerdServiceURL = "https://raw.githubusercontent.com/containerd/containerd/main/{}".format(
+            self.ContainerdServiceFileName
+        )
+        self.RuncURL = "https://github.com/opencontainers/runc/releases/download/v{}/{}".format(
+            flags.RuncVersion, self.RuncFileName
+        )
+        self.CNIpluginURL = "https://github.com/containernetworking/plugins/releases/download/v{}/{}".format(
+            flags.CNIPluginVersion, self.CNIpluginFileName
+        )
+        self.NerdctlURL = "https://github.com/containerd/nerdctl/releases/download/v{}/{}".format(
+            flags.NerdctlVersion, self.NerdctlFileName
+        )
 
     def downloadFiles(self):
-        containerdURL = "https://github.com/containerd/containerd/releases/download/v{}/{}".format(
-            flags.ContainerdVersion, self.containerdFileName
-        )
-        containerdServiceURL = "https://raw.githubusercontent.com/containerd/containerd/main/{}".format(
-            self.containerdServiceFileName
-        )
-        runcURL = "https://github.com/opencontainers/runc/releases/download/v{}/{}".format(
-            flags.RuncVersion, self.runcFileName
-        )
-        cnipluginURL = "https://github.com/containernetworking/plugins/releases/download/v{}/{}".format(
-            flags.CNIPluginVersion, self.cnipluginFileName
-        )
-        nerdctlURL = "https://github.com/containerd/nerdctl/releases/download/v{}/{}".format(
-            flags.NerdctlVersion, self.nerdctlFileName
-        )
-        logging.debug("Containerd 下载 URL: {}".format(containerdURL))
-        logging.debug("Containerd Service 下载 URL: {}".format(containerdServiceURL))
-        logging.debug("Runc 下载 URL: {}".format(runcURL))
-        logging.debug("CNI Plugin 下载 URL: {}".format(cnipluginURL))
-        logging.debug("Nerdctl 下载 URL: {}".format(nerdctlURL))
-
-        self.containerdFile = "{}/{}".format(flags.DownloadDir, self.containerdFileName)
-        self.containerdServiceFile = "{}/{}".format(flags.DownloadDir, self.containerdServiceFileName)
-        self.runcFile = "{}/{}".format(flags.DownloadDir, self.runcFileName)
-        self.cnipluginFile = "{}/{}".format(flags.DownloadDir, self.cnipluginFileName)
-        self.nerdctlFile = "{}/{}".format(flags.DownloadDir, self.nerdctlFileName)
+        logging.debug("Containerd 下载 URL: {}".format(self.ContainerdURL))
+        logging.debug("Containerd Service 下载 URL: {}".format(self.ContainerdServiceURL))
+        logging.debug("Runc 下载 URL: {}".format(self.RuncURL))
+        logging.debug("CNI Plugin 下载 URL: {}".format(self.CNIpluginURL))
+        logging.debug("Nerdctl 下载 URL: {}".format(self.NerdctlURL))
 
         # 下载 tar 包
         # TODO: 验证下载结果
-        if not os.path.exists(self.containerdFile):
-            request.urlretrieve(containerdURL, self.containerdFile)
-        if not os.path.exists(self.containerdServiceFile):
-            request.urlretrieve(containerdServiceURL, self.containerdServiceFile)
-        if not os.path.exists(self.runcFile):
-            request.urlretrieve(runcURL, self.runcFile)
-        if not os.path.exists(self.cnipluginFile):
-            request.urlretrieve(cnipluginURL, self.cnipluginFile)
-        if not os.path.exists(self.nerdctlFile):
-            request.urlretrieve(nerdctlURL, self.nerdctlFile)
+        if not os.path.exists(self.ContainerdFilePath):
+            request.urlretrieve(self.ContainerdURL, self.ContainerdFilePath)
+        if not os.path.exists(self.ContainerdServiceFilePath):
+            request.urlretrieve(self.ContainerdServiceURL, self.ContainerdServiceFilePath)
+        if not os.path.exists(self.RuncFilePath):
+            request.urlretrieve(self.RuncURL, self.RuncFilePath)
+        if not os.path.exists(self.CNIpluginFilePath):
+            request.urlretrieve(self.CNIpluginURL, self.CNIpluginFilePath)
+        if not os.path.exists(self.NerdctlFilePath):
+            request.urlretrieve(self.NerdctlURL, self.NerdctlFilePath)
 
     # 提取文件
     def extractingFiles(self):
         # 提取 Containerd
-        extracting(self.containerdFile, flags.WorkDir + "/usr/local/")
+        extracting(self.ContainerdFilePath, flags.WorkDir + "/usr/local/")
 
         # 提取 Containerd 的 Service
         if not os.path.exists(flags.WorkDir + "/etc/systemd/system"):
             os.makedirs(flags.WorkDir + "/etc/systemd/system")
-        if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.containerdServiceFileName):
-            shutil.move(self.containerdServiceFile, flags.WorkDir + "/etc/systemd/system/")
+        if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.ContainerdServiceFileName):
+            shutil.move(self.ContainerdServiceFilePath, flags.WorkDir + "/etc/systemd/system/")
 
         # 提取 runc
         if not os.path.exists(flags.WorkDir + "/usr/local/sbin"):
             os.makedirs(flags.WorkDir + "/usr/local/sbin")
-        shutil.move(self.runcFile, flags.WorkDir + "/usr/local/sbin/runc")
+        shutil.move(self.RuncFilePath, flags.WorkDir + "/usr/local/sbin/runc")
         os.chmod(flags.WorkDir + "/usr/local/sbin/runc", stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH)
 
         # 提取 CNI Plugins
-        extracting(self.cnipluginFile, flags.WorkDir + "/opt/cni/bin/")
+        extracting(self.CNIpluginFilePath, flags.WorkDir + "/opt/cni/bin/")
 
         # 提取 Nerdctl
-        extracting(self.nerdctlFile, flags.WorkDir + "/usr/local/bin/")
+        extracting(self.NerdctlFilePath, flags.WorkDir + "/usr/local/bin/")
 
 
-def handleFiles():
+def handleFiles(flags: cli_flags):
     # 生成 nerdctl 的命令行补全
     if not os.path.exists(flags.WorkDir + "/usr/share/bash-completion/completions"):
         os.makedirs(flags.WorkDir + "/usr/share/bash-completion/completions")
+    nedctlCMD = "{0}/usr/local/bin/nerdctl completion bash > {0}/usr/share/bash-completion/completions/nerdctl".format(
+        flags.WorkDir
+    )
+    # 非 root 环境执行这个命令会有一些 WARN，忽略即可
+    os.system(nedctlCMD)
 
     # 删除 nerdctl 的一些没用的文件
     needDeleteFiles = ["containerd-rootless-setuptool.sh", "containerd-rootless.sh"]
@@ -172,12 +174,6 @@ def handleFiles():
         filePath = flags.WorkDir + "/usr/local/bin/" + file
         if os.path.exists(filePath):
             os.remove(filePath)
-
-    # 将 nerdctl 移动到 /usr/local/bin 下
-    nedctlCMD = "{0}/usr/local/bin/nerdctl completion bash > {0}/usr/share/bash-completion/completions/nerdctl".format(
-        flags.WorkDir
-    )
-    os.system(nedctlCMD)
 
     # 生成 crictl 配置文件
     # TODO: 有必要做嘛？
@@ -187,14 +183,14 @@ if __name__ == "__main__":
     flags = cli_flags()
     initLogging()
 
-    # # 实例化文件处理器
-    # files = files_handler()
+    # 实例化文件处理器
+    files = files_handler()
 
-    # # 下载文件
-    # files.downloadFiles()
-    # # 提取文件
-    # files.extractingFiles()
-    # # 提取文件后，处理归档目录以满足归档条件
-    # handleFiles()
+    # 下载文件
+    files.downloadFiles()
+    # 提取文件
+    files.extractingFiles()
+    # 提取文件后，处理归档目录以满足归档条件
+    handleFiles(flags)
     # 归档，生成归档文件
     archiving(flags.WorkDir, flags.DownloadDir + "/ehualu-containerd-{}.tar.gz".format(flags.ContainerdVersion))
