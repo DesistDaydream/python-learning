@@ -16,7 +16,7 @@ parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工
 parser.add_argument("-c", "--containerd-version", default="1.6.4", help="containerd 版本")
 parser.add_argument("-r", "--runc-version", default="1.1.1", help="Runc 版本")
 parser.add_argument("-p", "--cni-plugin-version", default="1.1.1", help="CNI 插件版本")
-parser.add_argument("-n", "--nerdctl-version", default="0.19.0", help="nerdctl 版本")
+parser.add_argument("-n", "--nerdctl-version", default="0.20.0", help="nerdctl 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
@@ -121,6 +121,10 @@ class files_handler:
         logging.debug("CNI Plugin 下载 URL: {}".format(self.CNIpluginURL))
         logging.debug("Nerdctl 下载 URL: {}".format(self.NerdctlURL))
 
+        # 创建下载目录
+        if not os.path.exists(flags.DownloadDir):
+            os.makedirs(flags.DownloadDir)
+
         # 下载 tar 包
         # TODO: 验证下载结果
         if not os.path.exists(self.ContainerdFilePath):
@@ -193,4 +197,4 @@ if __name__ == "__main__":
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles(flags)
     # 归档，生成归档文件
-    archiving(flags.WorkDir, flags.DownloadDir + "/ehualu-containerd-{}.tar.gz".format(flags.ContainerdVersion))
+    archiving(flags.WorkDir, flags.DownloadDir + "/containerd-ehualu-{}.tar.gz".format(flags.ContainerdVersion))
