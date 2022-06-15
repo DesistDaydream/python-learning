@@ -10,7 +10,7 @@ import tarfile
 import logging
 
 
-parser = argparse.ArgumentParser(description="CDN curl tools")
+parser = argparse.ArgumentParser(description="Containerd 安装包生成工具")
 parser.add_argument("-d", "--download-dir", default="/tmp/downloads", help="下载目录")
 parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工作目录")
 parser.add_argument("-c", "--containerd-version", default="1.6.6", help="containerd 版本")
