@@ -21,8 +21,8 @@ def notUseSysPath():
     print(def_module.fib(1000))
 
 
-def PrintSomething():
-    print("hahaha")
+def PrintSomething() -> str:
+    return "hahaha"
 
 
 if __name__ == "__main__":

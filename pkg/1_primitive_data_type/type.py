@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 stringType = "Hello World!"
 
 # 判断类型

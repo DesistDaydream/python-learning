@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from collections.abc import Iterable
 
 listType = ["List", "DataType", 1, 3.1415926]

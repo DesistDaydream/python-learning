@@ -1,7 +1,8 @@
 import math
 
 #  定义函数
-def myFunction():
+# 其中 -> str 用以指定函数返回值的类型，可以省略。
+def myFunction() -> str:
     return "Hello World"
 
 
