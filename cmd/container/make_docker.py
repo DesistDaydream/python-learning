@@ -86,15 +86,22 @@ class files_handler:
         # 文件名
         self.DockerFileName = "docker-{}.tgz".format(flags.DockerVersion)
         self.DockerServiceFileName = "docker.service"
+        self.DockerCompletionFileName = "docker"
         self.DockerComposeFileName = "docker-compose"
         # 文件保存路径
         self.DockerFilePath = "{}/{}".format(flags.DownloadDir, self.DockerFileName)
         self.DockerServiceFilePath = "{}/{}".format(flags.DownloadDir, self.DockerServiceFileName)
+        self.DockerCompletionFilePath = "{}/{}".format(flags.DownloadDir, self.DockerCompletionFileName)
         self.DockerComposeFilePath = "{}/{}".format(flags.DownloadDir, self.DockerComposeFileName)
         # 下载文件的 URL
         self.DockerURL = "https://download.docker.com/linux/static/stable/x86_64/{}".format(self.DockerFileName)
         self.DockerServiceURL = "https://raw.githubusercontent.com/moby/moby/v{}/contrib/init/systemd/{}".format(
             flags.DockerVersion, self.DockerServiceFileName
+        )
+        self.DockerCompletionURL = (
+            "https://raw.githubusercontent.com/docker/cli/v{}/contrib/completion/bash/docker".format(
+                flags.DockerVersion
+            )
         )
         self.DockerComposeURL = (
             "https://github.com/docker/compose/releases/download/v{}/docker-compose-linux-x86_64".format(
@@ -104,6 +111,7 @@ class files_handler:
 
     def downloadFiles(self):
         logging.debug("Docker Service 下载 URL: {}".format(self.DockerServiceURL))
+        logging.debug("Docker Completion 文件 下载 URL: {}".format(self.DockerCompletionURL))
         logging.debug("Docker 下载 URL: {}".format(self.DockerURL))
         logging.debug("Docker Compose 下载 URL: {}".format(self.DockerComposeURL))
 
@@ -115,6 +123,8 @@ class files_handler:
         # TODO: 验证下载结果
         if not os.path.exists(self.DockerServiceFilePath):
             request.urlretrieve(self.DockerServiceURL, self.DockerServiceFilePath)
+        if not os.path.exists(self.DockerCompletionFilePath):
+            request.urlretrieve(self.DockerCompletionURL, self.DockerCompletionFilePath)
         if not os.path.exists(self.DockerFilePath):
             request.urlretrieve(self.DockerURL, self.DockerFilePath)
         if not os.path.exists(self.DockerComposeFilePath):
@@ -122,27 +132,31 @@ class files_handler:
 
     # 提取文件
     def extractingFiles(self):
+        # 创建目录
+        os.makedirs(flags.WorkDir + "/etc/systemd/system", exist_ok=True)
+        os.makedirs(flags.WorkDir + "/usr/share/bash-completion/completions", exist_ok=True)
+        os.makedirs(flags.WorkDir + "/usr/local/bin", exist_ok=True)
+
         # 提取 Docker
         extracting(self.DockerFilePath, flags.WorkDir + "/usr/bin/")
 
-        # 将 Docker 的 Service 文件移动到指定目录
-        if not os.path.exists(flags.WorkDir + "/etc/systemd/system"):
-            os.makedirs(flags.WorkDir + "/etc/systemd/system")
+        # 将 Docker 的 Service 文件拷贝到指定目录
         if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.DockerServiceFileName):
-            # shutil.move(self.DockerServiceFilePath, flags.WorkDir + "/etc/systemd/system/"):
             shutil.copy2(self.DockerServiceFilePath, flags.WorkDir + "/etc/systemd/system/")
 
-        # 将 docker-compose 文件移动到执行目录，并赋予权限
-        if not os.path.exists(flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName):
-            shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + "/etc/systemd/system/")
-        os.chmod(
-            flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName,
-            stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH,
-        )
+        # 将 Docker 的命令行补全文件拷贝到指定目录
+        if not os.path.exists(
+            flags.WorkDir + "/usr/share/bash-completion/completions/" + self.DockerCompletionFileName
+        ):
+            shutil.copy2(self.DockerCompletionFilePath, flags.WorkDir + "/usr/share/bash-completion/completions/")
 
-        # TODO
-        # Docker 命令行补全
-        # docker-compose 文件
+        # 将 docker-compose 文件拷贝到指定目录，并赋予权限
+        if not os.path.exists(flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName):
+            shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + "/usr/local/bin/")
+            os.chmod(
+                flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName,
+                stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH,
+            )
 
         # # 提取 CNI Plugins
         # extracting(self.CNIpluginFilePath, flags.WorkDir + "/opt/cni/bin/")
@@ -179,4 +193,4 @@ if __name__ == "__main__":
     # 提取文件后，处理归档目录以满足归档条件
     # handleFiles(flags)
     # 归档，生成归档文件
-    # archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.ContainerdVersion))
+    archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
