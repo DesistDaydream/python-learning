@@ -127,10 +127,10 @@ class files_handler:
 
         # 下载 tar 包
         # TODO: 验证下载结果
-        if not os.path.exists(self.ContainerdFilePath):
-            request.urlretrieve(self.ContainerdURL, self.ContainerdFilePath)
         if not os.path.exists(self.ContainerdServiceFilePath):
             request.urlretrieve(self.ContainerdServiceURL, self.ContainerdServiceFilePath)
+        if not os.path.exists(self.ContainerdFilePath):
+            request.urlretrieve(self.ContainerdURL, self.ContainerdFilePath)
         if not os.path.exists(self.RuncFilePath):
             request.urlretrieve(self.RuncURL, self.RuncFilePath)
         if not os.path.exists(self.CNIpluginFilePath):
