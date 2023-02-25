@@ -9,6 +9,7 @@ import os, sys, stat
 import tarfile
 import logging
 import json
+import fileinput
 
 
 parser = argparse.ArgumentParser(description="Containerd 安装包生成工具")
@@ -52,7 +53,6 @@ def initLogging():
 def archiving(src: str, dest: str):
     # 改变工作路径以去掉所有待归档文件的前缀
     os.chdir(src)
-    logging.debug("当前工作路径: {}".format(os.getcwd()))
 
     # 创建归档文件
     tar = tarfile.open(dest, "w:gz")
@@ -205,8 +205,11 @@ def handleFiles(flags: cli_flags):
     with open(flags.WorkDir + "/etc/docker/daemon.json", "w") as f:
         f.write(json_str)
 
-
-# 定义要写入的配置字典
+    # 修改 docker.socket 文件
+    for line in fileinput.input(flags.WorkDir + "/etc/systemd/system/docker.socket", inplace=True):
+        line = line.replace("ListenStream=/run/docker.sock", "ListenStream=/var/run/docker.sock")
+        line = line.replace("SocketGroup=docker", "SocketGroup=root")
+        print(line, end="")
 
 
 if __name__ == "__main__":
@@ -215,6 +218,8 @@ if __name__ == "__main__":
 
     # 实例化文件处理器
     files = files_handler()
+
+    logging.debug("当前工作路径: {}".format(os.getcwd()))
 
     # 下载文件
     files.downloadFiles()
