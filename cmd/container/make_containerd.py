@@ -16,7 +16,7 @@ parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工
 parser.add_argument("-c", "--containerd-version", default="1.6.6", help="containerd 版本")
 parser.add_argument("-r", "--runc-version", default="1.1.2", help="Runc 版本")
 parser.add_argument("-p", "--cni-plugin-version", default="1.1.1", help="CNI 插件版本")
-parser.add_argument("-n", "--nerdctl-version", default="0.20.0", help="nerdctl 版本")
+parser.add_argument("-n", "--nerdctl-version", default="1.2.1", help="nerdctl 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
