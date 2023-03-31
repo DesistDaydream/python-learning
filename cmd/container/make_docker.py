@@ -211,6 +211,17 @@ def handleFiles(flags: cli_flags):
         line = line.replace("SocketGroup=docker", "SocketGroup=root")
         print(line, end="")
 
+    # 在 docker.service 文件中判断 ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT 字符串是否存在，如果不存在，则在将其插入到以 ExecStart 开头的串字符串所在行的上一行
+    file_path = flags.WorkDir + "/etc/systemd/system/docker.service"
+
+    for line in fileinput.input(file_path, inplace=True):
+        if line.strip().startswith("ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT"):
+            continue
+        elif line.strip().startswith("ExecStart"):
+            print("ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT\n" + line, end="")
+        else:
+            print(line, end="")
+
 
 if __name__ == "__main__":
     flags = cli_flags()
@@ -222,10 +233,10 @@ if __name__ == "__main__":
     logging.debug("当前工作路径: {}".format(os.getcwd()))
 
     # 下载文件
-    files.downloadFiles()
+    # files.downloadFiles()
     # 提取文件
-    files.extractingFiles()
+    # files.extractingFiles()
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles(flags)
     # 归档，生成归档文件
-    archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
+    # archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
