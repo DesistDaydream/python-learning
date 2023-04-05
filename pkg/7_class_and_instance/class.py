@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 # 使用 class 关键字定义一个名为 Student 的类
 class Student:
     # 初始化属性。总是要带一个 self 参数，用来表示这个类自身，当实例化后，可以通过实例化后的变量直接调用自身的属性

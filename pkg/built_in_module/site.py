@@ -1,4 +1,4 @@
-import sys,site
+import sys, site
 
 print(sys.prefix, sys.exec_prefix)
 
