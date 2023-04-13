@@ -11,4 +11,4 @@ from package_two import import_package as indirect_import
 # import_package.useSysPath()
 # import_package.notUseSysPath()
 print("通过 import 关键字直接导入包中的模块:", direct_import.PrintSomething())
-print("通过 fromt 关键字间接导入包中的模块:", indirect_import.PrintSomething())
+print("通过 from 关键字间接导入包中的模块:", indirect_import.PrintSomething())
