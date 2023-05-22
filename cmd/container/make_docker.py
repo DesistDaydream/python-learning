@@ -233,10 +233,10 @@ if __name__ == "__main__":
     logging.debug("当前工作路径: {}".format(os.getcwd()))
 
     # 下载文件
-    # files.downloadFiles()
+    files.downloadFiles()
     # 提取文件
-    # files.extractingFiles()
+    files.extractingFiles()
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles(flags)
     # 归档，生成归档文件
-    # archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
+    archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
