@@ -12,15 +12,12 @@ import json
 import fileinput
 
 
-parser = argparse.ArgumentParser(description="Containerd 安装包生成工具")
+parser = argparse.ArgumentParser(description="Docker 部署包生成工具")
 parser.add_argument("-d", "--download-dir", default="/tmp/downloads", help="下载目录")
 parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工作目录")
-parser.add_argument("-z", "--docker-version", default="20.10.23", help="docker 版本")
-parser.add_argument("-x", "--docker-compose-version", default="2.16.0", help="docker compose 版本")
-parser.add_argument("-c", "--containerd-version", default="1.6.6", help="containerd 版本")
-parser.add_argument("-r", "--runc-version", default="1.1.2", help="Runc 版本")
-parser.add_argument("-p", "--cni-plugin-version", default="1.1.1", help="CNI 插件版本")
-parser.add_argument("-n", "--nerdctl-version", default="0.20.0", help="nerdctl 版本")
+# runc、containerd 版本都是多少？这里涉及到使用的 containerd.service，如何通过代码确定当前版本的 docker 所使用的 containerd 版本呢？
+parser.add_argument("-z", "--docker-version", default="24.0.6", help="docker 版本")
+parser.add_argument("-x", "--docker-compose-version", default="2.22.0", help="docker compose 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
@@ -103,6 +100,7 @@ class files_handler:
         self.ContainerdServiceURL = "https://raw.githubusercontent.com/containerd/containerd/main/{}".format(
             self.ContainerdServiceFileName
         )
+        # https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz
         self.DockerURL = "https://download.docker.com/linux/static/stable/x86_64/{}".format(self.DockerFileName)
         self.DockerServiceURL = "https://raw.githubusercontent.com/moby/moby/v{}/contrib/init/systemd/{}".format(
             flags.DockerVersion, self.DockerServiceFileName
@@ -157,9 +155,9 @@ class files_handler:
         os.makedirs(flags.WorkDir + "/usr/bin", exist_ok=True)
         os.makedirs(flags.WorkDir + "/etc/docker", exist_ok=True)
 
-        # 拷贝 Containerd 的 Service 文件
+        # 拷贝 containerd.service 文件到工作目录
         if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.ContainerdServiceFileName):
-            shutil.move(self.ContainerdServiceFilePath, flags.WorkDir + "/etc/systemd/system/")
+            shutil.copy2(self.ContainerdServiceFilePath, flags.WorkDir + "/etc/systemd/system/")
 
         # 提取 Docker
         extracting(self.DockerFilePath, flags.WorkDir)
@@ -167,19 +165,19 @@ class files_handler:
         for file in docker_files:
             shutil.move(flags.WorkDir + "/docker/" + file, flags.WorkDir + "/usr/bin/" + file)
 
-        # 将 Docker 的 Service 文件拷贝到指定目录
+        # 将 Docker 的 Service 文件拷贝到工作目录
         if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.DockerServiceFileName):
             shutil.copy2(self.DockerServiceFilePath, flags.WorkDir + "/etc/systemd/system/")
         if not os.path.exists(flags.WorkDir + "/etc/systemd/system/" + self.DockerSocketFileName):
             shutil.copy2(self.DockerSocketFilePath, flags.WorkDir + "/etc/systemd/system/")
 
-        # 将 Docker 的命令行补全文件拷贝到指定目录
+        # 将 Docker 的命令行补全文件拷贝到工作目录
         if not os.path.exists(
             flags.WorkDir + "/usr/share/bash-completion/completions/" + self.DockerCompletionFileName
         ):
             shutil.copy2(self.DockerCompletionFilePath, flags.WorkDir + "/usr/share/bash-completion/completions/")
 
-        # 将 docker-compose 文件拷贝到指定目录，并赋予权限
+        # 将 docker-compose 文件拷贝到工作目录，并赋予权限
         if not os.path.exists(flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName):
             shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + "/usr/local/bin/")
             os.chmod(
@@ -198,12 +196,17 @@ def handleFiles(flags: cli_flags):
         "log-driver": "json-file",
         "log-opts": {"max-size": "5m", "max-file": "5"},
         "storage-driver": "overlay2",
-        "storage-opts": ["overlay2.override_kernel_check=true"],
+        # "storage-opts": ["overlay2.override_kernel_check=true"],
     }
 
     json_str = json.dumps(config, indent=2)
     with open(flags.WorkDir + "/etc/docker/daemon.json", "w") as f:
         f.write(json_str)
+
+    # 修改 containerd.service 文件
+    for line in fileinput.input(flags.WorkDir + "/etc/systemd/system/containerd.service" , inplace=True):
+        line = line.replace("ExecStart=/usr/local/bin/containerd", "ExecStart=/usr/bin/containerd")
+        print(line, end="")
 
     # 修改 docker.socket 文件
     for line in fileinput.input(flags.WorkDir + "/etc/systemd/system/docker.socket", inplace=True):
@@ -239,4 +242,4 @@ if __name__ == "__main__":
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles(flags)
     # 归档，生成归档文件
-    archiving(flags.WorkDir, flags.DownloadDir + "/docker-ehualu-{}.tar.gz".format(flags.DockerVersion))
+    archiving(flags.WorkDir, flags.DownloadDir + "/docker-dd-{}.tar.gz".format(flags.DockerVersion))
