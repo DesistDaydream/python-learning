@@ -17,7 +17,7 @@ parser.add_argument("-d", "--download-dir", default="/tmp/downloads", help="下�
 parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工作目录")
 # runc、containerd 版本都是多少？这里涉及到使用的 containerd.service，如何通过代码确定当前版本的 docker 所使用的 containerd 版本呢？
 parser.add_argument("-z", "--docker-version", default="24.0.6", help="docker 版本")
-parser.add_argument("-x", "--docker-compose-version", default="2.22.0", help="docker compose 版本")
+parser.add_argument("-x", "--docker-compose-version", default="2.24.2", help="docker compose 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
@@ -178,10 +178,13 @@ class files_handler:
             shutil.copy2(self.DockerCompletionFilePath, flags.WorkDir + "/usr/share/bash-completion/completions/")
 
         # 将 docker-compose 文件拷贝到工作目录，并赋予权限
-        if not os.path.exists(flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName):
-            shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + "/usr/local/bin/")
+        # binDir = "/usr/local/bin/" # 独立形式
+        binDir = "/root/.docker/cli-plugins/" # 插件形式
+        os.makedirs(flags.WorkDir + binDir, exist_ok=True)
+        if not os.path.exists(flags.WorkDir + binDir + self.DockerComposeFileName):
+            shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + binDir)
             os.chmod(
-                flags.WorkDir + "/usr/local/bin/" + self.DockerComposeFileName,
+                flags.WorkDir + binDir + self.DockerComposeFileName,
                 stat.S_IRWXU + stat.S_IRGRP + stat.S_IXGRP + stat.S_IROTH,
             )
 
@@ -194,7 +197,7 @@ def handleFiles(flags: cli_flags):
         "default-address-pools": [{"base": "10.38.0.0/16", "size": 24}],
         "live-restore": True,
         "log-driver": "json-file",
-        "log-opts": {"max-size": "5m", "max-file": "5"},
+        "log-opts": {"max-size": "10m", "max-file": "10"},
         "storage-driver": "overlay2",
         # "storage-opts": ["overlay2.override_kernel_check=true"],
     }
