@@ -1,3 +1,4 @@
+# dict 基本示例
 def dict_demo():
     # Python 中 dict 就是 map
     d = {"Michael": 95, "Bob": 75, "Tracy": 85}
@@ -18,7 +19,8 @@ def dict_demo():
     d.pop("Adam")
 
 
-def dict_dict_demo():
+# dict 中包含 dict 示例
+def dict_in_dict_demo():
     # dict 中的 value 也可以是 dict
     d = {
         "Michael": {"Math": 95, "English": 85},
@@ -29,6 +31,18 @@ def dict_dict_demo():
     print(d)
 
 
+# 遍历 dict 示例
+def dict_traversal_demo():
+    # 遍历 Python dict
+    d = {"Michael": 95, "Bob": 75, "Tracy": 85}
+    for key in d:
+        print(key, d[key])
+
+    # 通过 items() 方法遍历 dict
+    for key, value in d.items():
+        print(key, value)
+
+
 if __name__ == "__main__":
     # dict_demo()
-    dict_dict_demo()
+    dict_in_dict_demo()
