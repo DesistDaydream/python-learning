@@ -16,8 +16,8 @@ parser = argparse.ArgumentParser(description="Docker 部署包生成工具")
 parser.add_argument("-d", "--download-dir", default="/tmp/downloads", help="下载目录")
 parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工作目录")
 # runc、containerd 版本都是多少？这里涉及到使用的 containerd.service，如何通过代码确定当前版本的 docker 所使用的 containerd 版本呢？
-parser.add_argument("-z", "--docker-version", default="24.0.6", help="docker 版本")
-parser.add_argument("-x", "--docker-compose-version", default="2.24.2", help="docker compose 版本")
+parser.add_argument("-z", "--docker-version", default="28.1.1", help="docker 版本")
+parser.add_argument("-x", "--docker-compose-version", default="2.35.1", help="docker compose 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
@@ -179,7 +179,7 @@ class files_handler:
 
         # 将 docker-compose 文件拷贝到工作目录，并赋予权限
         # binDir = "/usr/local/bin/" # 独立形式
-        binDir = "/root/.docker/cli-plugins/" # 插件形式
+        binDir = "/usr/local/lib/docker/cli-plugins/" # 插件形式
         os.makedirs(flags.WorkDir + binDir, exist_ok=True)
         if not os.path.exists(flags.WorkDir + binDir + self.DockerComposeFileName):
             shutil.copy2(self.DockerComposeFilePath, flags.WorkDir + binDir)
@@ -191,10 +191,17 @@ class files_handler:
 
 def handleFiles(flags: cli_flags):
     config = {
-        "experimental": True,
-        "registry-mirrors": ["https://ac1rmo5p.mirror.aliyuncs.com"],
-        "exec-opts": ["native.cgroupdriver=systemd"],
+        # "experimental": True,
+        "registry-mirrors": [
+            "https://docker.m.daocloud.io",
+            "https://dockerhub.icu",
+            "https://docker.1panel.live",
+            "https://docker.anyhub.us.kg",
+            "https://dhub.kubesre.xyz"
+        ],
+        # "exec-opts": ["native.cgroupdriver=systemd"],
         "default-address-pools": [{"base": "10.38.0.0/16", "size": 24}],
+        "ip-forward-no-drop": True,
         "live-restore": True,
         "log-driver": "json-file",
         "log-opts": {"max-size": "10m", "max-file": "10"},
@@ -216,18 +223,6 @@ def handleFiles(flags: cli_flags):
         line = line.replace("ListenStream=/run/docker.sock", "ListenStream=/var/run/docker.sock")
         line = line.replace("SocketGroup=docker", "SocketGroup=root")
         print(line, end="")
-
-    # 在 docker.service 文件中判断 ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT 字符串是否存在，如果不存在，则在将其插入到以 ExecStart 开头的串字符串所在行的上一行
-    file_path = flags.WorkDir + "/etc/systemd/system/docker.service"
-
-    for line in fileinput.input(file_path, inplace=True):
-        if line.strip().startswith("ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT"):
-            continue
-        elif line.strip().startswith("ExecStart"):
-            print("ExecStartPost=/usr/sbin/iptables -P FORWARD ACCEPT\n" + line, end="")
-        else:
-            print(line, end="")
-
 
 if __name__ == "__main__":
     flags = cli_flags()
