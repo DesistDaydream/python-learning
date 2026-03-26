@@ -12,8 +12,8 @@ class Student:
 
     # https://docs.python.org/3.12/reference/datamodel.html#emulating-callable-objects
     # 把实例化后的 Student 当作函数调用时，会自动调用 __call__ 方法
-    def __call__(self):
-        print("call")
+    def __call__(self, *args):
+        print("call", args)
 
     # 方法，获取实例化后的 name 属性的值。即获取学生的名字
     def getName(self):
@@ -47,4 +47,4 @@ bart.printScore()
 print("%s 的评级: %s" % (bart.getName(), bart.getGrade()))
 
 # 调用实例化后的对象，把对象当成函数一样使用，相当于调用 __call__() 方法
-bart()
+bart(1, 2, 3)
