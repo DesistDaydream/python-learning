@@ -16,8 +16,8 @@ parser = argparse.ArgumentParser(description="Docker 部署包生成工具")
 parser.add_argument("-d", "--download-dir", default="/tmp/downloads", help="下载目录")
 parser.add_argument("-w", "--work-dir", default="/tmp/downloads/work", help="工作目录")
 # runc、containerd 版本都是多少？这里涉及到使用的 containerd.service，如何通过代码确定当前版本的 docker 所使用的 containerd 版本呢？
-parser.add_argument("-z", "--docker-version", default="28.1.1", help="docker 版本")
-parser.add_argument("-x", "--docker-compose-version", default="2.35.1", help="docker compose 版本")
+parser.add_argument("-z", "--docker-version", default="29.4.1", help="docker 版本")
+parser.add_argument("-x", "--docker-compose-version", default="5.1.3", help="docker compose 版本")
 parser.add_argument("-a", "--arch", default="amd64", help="工具架构")
 parser.add_argument("-l", "--log-level", default="info", help="日志级别.可用的值有: info,warn,debug")
 
@@ -82,6 +82,13 @@ def extracting(tar_path: str, target_path: str):
 # 文件处理器。下载、解压、处理。继承了命令行标志
 class files_handler:
     def __init__(self):
+        # amd64 -> x86_64, arm64 -> aarch64（docker 和 compose 路径命名一致）
+        arch_map = {
+            "amd64": "x86_64",
+            "arm64": "aarch64",
+        }
+        arch = arch_map.get(flags.Arch, flags.Arch)
+
         # 文件名
         self.ContainerdServiceFileName = "containerd.service"
         self.DockerFileName = "docker-{}.tgz".format(flags.DockerVersion)
@@ -100,12 +107,11 @@ class files_handler:
         self.ContainerdServiceURL = "https://raw.githubusercontent.com/containerd/containerd/main/{}".format(
             self.ContainerdServiceFileName
         )
-        # https://download.docker.com/linux/static/stable/x86_64/docker-24.0.6.tgz
-        self.DockerURL = "https://download.docker.com/linux/static/stable/x86_64/{}".format(self.DockerFileName)
-        self.DockerServiceURL = "https://raw.githubusercontent.com/moby/moby/v{}/contrib/init/systemd/{}".format(
+        self.DockerURL = "https://download.docker.com/linux/static/stable/{}/{}".format(arch, self.DockerFileName)
+        self.DockerServiceURL = "https://raw.githubusercontent.com/moby/moby/docker-v{}/contrib/init/systemd/{}".format(
             flags.DockerVersion, self.DockerServiceFileName
         )
-        self.DockerSocketURL = "https://raw.githubusercontent.com/moby/moby/v{}/contrib/init/systemd/{}".format(
+        self.DockerSocketURL = "https://raw.githubusercontent.com/moby/moby/docker-v{}/contrib/init/systemd/{}".format(
             flags.DockerVersion, self.DockerSocketFileName
         )
         self.DockerCompletionURL = (
@@ -114,8 +120,8 @@ class files_handler:
             )
         )
         self.DockerComposeURL = (
-            "https://github.com/docker/compose/releases/download/v{}/docker-compose-linux-x86_64".format(
-                flags.DockerComposeVersion
+            "https://github.com/docker/compose/releases/download/v{}/docker-compose-linux-{}".format(
+                flags.DockerComposeVersion, arch
             )
         )
 
@@ -240,4 +246,4 @@ if __name__ == "__main__":
     # 提取文件后，处理归档目录以满足归档条件
     handleFiles(flags)
     # 归档，生成归档文件
-    archiving(flags.WorkDir, flags.DownloadDir + "/docker-dd-{}.tar.gz".format(flags.DockerVersion))
+    archiving(flags.WorkDir, flags.DownloadDir + "/docker-dd-{}-{}.tar.gz".format(flags.DockerVersion,flags.Arch))
